@@ -1,0 +1,278 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "type": "string"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        },
+        "vmSize": {
+            "type": "string"
+        },
+        "ubuntuOSVersion": {
+            "type": "string"
+        },
+        "imagePublisher": {
+            "type": "string"
+        },
+        "imageOffer": {
+            "type": "string"
+        },
+        "managedDiskName": {
+            "type": "string"
+        },
+        "chef_backend_install_script_base": {
+            "type": "string"
+        },
+        "dbPassword": {
+            "type": "string"
+        },
+        "replicationPassword": {
+            "type": "string"
+        },
+        "clusterToken": {
+            "type": "string"
+        },
+        "clusterName": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "vm1",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "vm1",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[base64(concat('#cloud-config\n', '\n', 'write_files:\n', '-   encoding: b64\n', '    content: ', base64(parameters('chef_backend_install_script_base')) , '\n', '    path: /etc/chef-backend/chef_backend_install_script_base.sh\n', '    permissions: 0700\n'))]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('imagePublisher')]",
+                        "offer": "[parameters('imageOffer')]",
+                        "sku": "[parameters('ubuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('managedDiskName'),'1')]",
+                            "lun": 0,
+                            "caching": "None",
+                            "createOption": "Attach",
+                            "managedDisk": {
+                                "id": "[resourceId('Microsoft.Compute/disks',concat(parameters('managedDiskName'),'1'))]"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces','nic1')]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            },
+            "resources": [
+                {
+                    "name": "ChefBackendCreateVM1",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2015-06-15",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', 'vm1')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "commandToExecute": "bash /etc/chef-backend/chef_backend_install_script_base.sh"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "vm2",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "vm2",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[base64(concat('#cloud-config\n', '\n', 'write_files:\n', '-   encoding: b64\n', '    content: ', base64(parameters('chef_backend_install_script_base')) , '\n', '    path: /etc/chef-backend/chef_backend_install_script_base.sh\n', '    permissions: 0700\n'))]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('imagePublisher')]",
+                        "offer": "[parameters('imageOffer')]",
+                        "sku": "[parameters('ubuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('managedDiskName'),'2')]",
+                            "lun": 0,
+                            "caching": "None",
+                            "createOption": "Attach",
+                            "managedDisk": {
+                                "id": "[resourceId('Microsoft.Compute/disks',concat(parameters('managedDiskName'),'2'))]"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces','nic2')]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            },
+            "resources": [
+                {
+                    "name": "ChefBackendJoinVM2",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2015-06-15",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', 'vm2')]",
+                        "[concat('Microsoft.Compute/virtualMachines/vm1/extensions/', 'ChefBackendCreateVM1')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "commandToExecute": "bash /etc/chef-backend/chef_backend_install_script_base.sh"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "vm3",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "vm3",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[base64(concat('#cloud-config\n', '\n', 'write_files:\n', '-   encoding: b64\n', '    content: ', base64(parameters('chef_backend_install_script_base')) , '\n', '    path: /etc/chef-backend/chef_backend_install_script_base.sh\n', '    permissions: 0700\n'))]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('imagePublisher')]",
+                        "offer": "[parameters('imageOffer')]",
+                        "sku": "[parameters('ubuntuOSVersion')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "createOption": "FromImage"
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[concat(parameters('managedDiskName'),'3')]",
+                            "lun": 0,
+                            "caching": "None",
+                            "createOption": "Attach",
+                            "managedDisk": {
+                                "id": "[resourceId('Microsoft.Compute/disks',concat(parameters('managedDiskName'),'3'))]"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces','nic3')]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            },
+            "resources": [
+                {
+                    "name": "ChefBackendJoinVM3",
+                    "type": "extensions",
+                    "location": "[resourceGroup().location]",
+                    "apiVersion": "2016-04-30-preview",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', 'vm3')]",
+                        "[concat('Microsoft.Compute/virtualMachines/vm2/extensions/', 'ChefBackendJoinVM2')]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Azure.Extensions",
+                        "type": "CustomScript",
+                        "typeHandlerVersion": "2.0",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "commandToExecute": "bash /etc/chef-backend/chef_backend_install_script_base.sh"
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "dbPassword":{
+            "type": "string",
+            "value": "[parameters('dbPassword')]"
+        },
+        "replicationPassword":{
+            "type": "string",
+            "value": "[parameters('replicationPassword')]"
+        },
+        "clusterToken":{
+            "type": "string",
+            "value": "[parameters('clusterToken')]"
+        },
+        "clusterName":{
+            "type": "string",
+            "value": "[parameters('clusterName')]"
+        }
+    }
+}
