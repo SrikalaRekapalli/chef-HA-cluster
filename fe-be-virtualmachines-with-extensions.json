@@ -10,7 +10,10 @@
         },
         "keyvaultSettings": {
             "type": "object"
-        }
+        },
+        "osProfile":{
+            "type":"object"
+            }
     },
     "variables": {},
     "resources": [
@@ -23,7 +26,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -93,7 +96,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -164,7 +167,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -235,7 +238,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -308,7 +311,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -379,7 +382,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
@@ -450,7 +453,7 @@
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeSettings').vmSize]"
                 },
-                "osProfile": "[parameters('computeSettings').osProfile]",
+                "osProfile": "[parameters('osProfile')]",
                 "storageProfile": {
                     "imageReference": {
                         "publisher": "[parameters('computeSettings').imagePublisher]",
